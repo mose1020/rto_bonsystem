@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Bestellung{% endblock %}
+{% block content %}
+<div class="order-grid">
+  <section class="catalog" aria-label="Speisekarte">
+    {% for category in menu.categories %}
+      <h2 class="catalog__heading">{{ category.name }}</h2>
+      <div class="catalog__grid">
+        {% for item in category["items"] %}
+          <button type="button" class="product"
+                  data-id="{{ item.id }}"
+                  data-name="{{ item.name }}"
+                  data-price="{{ '%.2f'|format(item.price) }}">
+            <span class="product__name">{{ item.name }}</span>
+            <span class="product__price">{{ '%.2f'|format(item.price) }} €</span>
+          </button>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </section>
+
+  <aside class="cart" aria-label="Warenkorb">
+    <h2 class="cart__heading">Bestellung</h2>
+    <ul id="cart-list" class="cart__list" aria-live="polite"></ul>
+    <label class="cart__note">
+      Notiz
+      <textarea id="cart-note" rows="2" placeholder="z. B. ohne Senf"></textarea>
+    </label>
+    <div class="cart__total">
+      <span>Summe</span>
+      <strong id="cart-total">0,00 €</strong>
+    </div>
+    <div class="cart__actions">
+      <button id="cart-clear" type="button" class="btn btn--ghost">Leeren</button>
+      <button id="cart-submit" type="button" class="btn btn--primary">Bon drucken</button>
+    </div>
+    <p id="cart-feedback" class="cart__feedback" role="status" aria-live="polite"></p>
+  </aside>
+</div>
+{% endblock %}

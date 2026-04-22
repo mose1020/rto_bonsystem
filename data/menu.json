@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "currency": "EUR",
+  "categories": [
+    {
+      "id": "getraenke",
+      "name": "Getränke",
+      "items": [
+        {"id": "bier-05", "name": "Bier 0,5l", "price": 4.00},
+        {"id": "radler-05", "name": "Radler 0,5l", "price": 4.00},
+        {"id": "wasser-05", "name": "Wasser 0,5l", "price": 2.50},
+        {"id": "cola-03", "name": "Cola 0,3l", "price": 2.50}
+      ]
+    },
+    {
+      "id": "essen",
+      "name": "Essen",
+      "items": [
+        {"id": "bratwurst", "name": "Bratwurst mit Brötchen", "price": 4.50},
+        {"id": "pommes", "name": "Pommes", "price": 3.50},
+        {"id": "currywurst", "name": "Currywurst mit Pommes", "price": 7.00}
+      ]
+    }
+  ]
+}

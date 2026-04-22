@@ -1,0 +1,17 @@
+[Unit]
+Description=Bonsystem Flask-App
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+SupplementaryGroups=lp
+WorkingDirectory=/home/pi/rto_bonsystem
+EnvironmentFile=/home/pi/rto_bonsystem/.env
+ExecStart=/home/pi/rto_bonsystem/.venv/bin/python -m app.wsgi
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
