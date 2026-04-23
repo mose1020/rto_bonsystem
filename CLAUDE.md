@@ -21,8 +21,10 @@ Flask-Bonsystem, das offline auf einem Raspberry Pi 5 läuft: Ein Laptop ruft im
 Details pro Gerät:
 - [docs/network-setup.md](docs/network-setup.md) – Router konfigurieren, DHCP-Reservierungen
 - [docs/raspberry-pi-setup.md](docs/raspberry-pi-setup.md) – Pi-OS, Autostart via systemd, Kiosk
-- [docs/printer-setup.md](docs/printer-setup.md) – Munbyn ITPP047P Selbsttest, IP, Testdruck
+- [docs/printer-setup.md](docs/printer-setup.md) – Munbyn ITPP047P USB, udev, Testdruck
 - [docs/hardware-setup.md](docs/hardware-setup.md) – Verkabelung und Reihenfolge des Hochfahrens
+
+Offene Aufgaben und Backlog: [docs/backlog.md](docs/backlog.md).
 
 ## Architektur
 
