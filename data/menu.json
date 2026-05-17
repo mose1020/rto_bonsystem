@@ -1,24 +1,40 @@
 {
-  "version": 1,
+  "version": 2,
   "currency": "EUR",
   "categories": [
     {
       "id": "getraenke",
       "name": "Getränke",
       "items": [
-        {"id": "bier-05", "name": "Bier 0,5l", "price": 4.00},
-        {"id": "radler-05", "name": "Radler 0,5l", "price": 4.00},
-        {"id": "wasser-05", "name": "Wasser 0,5l", "price": 2.50},
-        {"id": "cola-03", "name": "Cola 0,3l", "price": 2.50}
+        {"id": "wasser-peterstaler-05",          "name": "Peterstaler Mineralwasser 0,5l",      "price": 2.50},
+        {"id": "apfelschorle-peterstaler-05",    "name": "Peterstaler Apfelsaftschorle 0,5l",   "price": 3.00},
+        {"id": "topfit-peterstaler-05",          "name": "Peterstaler Topfit 0,5l",             "price": 3.00},
+        {"id": "coca-cola-05",                   "name": "Coca-Cola 0,5l",                       "price": 3.00},
+        {"id": "spezi-paulaner-05",              "name": "Paulaner Spezi 0,5l",                  "price": 3.00},
+
+        {"id": "ketterer-urweisse-fass-05",      "name": "Ketterer Ur-Weisse hell vom Fass 0,5l", "price": 4.00, "deposit": 2.00},
+        {"id": "ketterer-pils-fass-03",          "name": "Ketterer Pils feinherb vom Fass 0,3l",  "price": 3.00, "deposit": 2.00},
+        {"id": "ketterer-weizen-af-05",          "name": "Ketterer Weizen alkoholfrei 0,5l",      "price": 4.00, "deposit": 2.00},
+        {"id": "ketterer-weizenradler-af-05",    "name": "Ketterer Weizenradler alkoholfrei 0,5l","price": 4.00, "deposit": 2.00},
+        {"id": "aperol-04",                      "name": "Aperol 0,4l",                            "price": 6.00, "deposit": 2.00}
       ]
     },
     {
-      "id": "essen",
-      "name": "Essen",
+      "id": "speisen",
+      "name": "Speisen",
       "items": [
-        {"id": "bratwurst", "name": "Bratwurst mit Brötchen", "price": 4.50},
-        {"id": "pommes", "name": "Pommes", "price": 3.50},
-        {"id": "currywurst", "name": "Currywurst mit Pommes", "price": 7.00}
+        {"id": "kaesespaetzle",     "name": "Portion Käsespätzle",       "price": 4.00},
+        {"id": "grillwurst-weck",   "name": "Grillwurst (Rot) im Weck",  "price": 3.50},
+        {"id": "merguez-weck",      "name": "Merguez im Weck",           "price": 4.00},
+        {"id": "grillsteak-weck",   "name": "Grillsteak im Weck",        "price": 5.00}
+      ]
+    },
+    {
+      "id": "kaffee-kuchen",
+      "name": "Kaffee & Kuchen",
+      "items": [
+        {"id": "kaffee", "name": "Tasse Kaffee", "price": 2.00},
+        {"id": "kuchen", "name": "Stück Kuchen", "price": 2.00}
       ]
     }
   ]

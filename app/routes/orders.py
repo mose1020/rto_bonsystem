@@ -18,14 +18,20 @@ bp = Blueprint("orders", __name__, url_prefix="/api/orders")
 def create_order():
     payload = request.get_json(silent=True) or {}
     items = payload.get("items") or []
-    note = (payload.get("note") or "").strip()
+    tendered_raw = payload.get("tendered")
+    tendered: float | None = None
+    if tendered_raw is not None and tendered_raw != "":
+        try:
+            tendered = float(tendered_raw)
+        except (TypeError, ValueError):
+            return jsonify({"error": "Ungültiger Wert für 'gegeben'."}), 400
 
     if not items:
         return jsonify({"error": "Keine Artikel in der Bestellung."}), 400
 
     menu = load_menu(current_app.config["MENU_PATH"])
     try:
-        order = build_order(menu, items, note=note)
+        order = build_order(menu, items, tendered=tendered)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 

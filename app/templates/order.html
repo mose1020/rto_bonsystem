@@ -7,12 +7,16 @@
       <h2 class="catalog__heading">{{ category.name }}</h2>
       <div class="catalog__grid">
         {% for item in category["items"] %}
-          <button type="button" class="product"
+          <button type="button" class="product{% if item.deposit %} product--deposit{% endif %}"
                   data-id="{{ item.id }}"
                   data-name="{{ item.name }}"
-                  data-price="{{ '%.2f'|format(item.price) }}">
+                  data-price="{{ '%.2f'|format(item.price) }}"
+                  data-deposit="{{ '%.2f'|format(item.deposit or 0) }}">
             <span class="product__name">{{ item.name }}</span>
-            <span class="product__price">{{ '%.2f'|format(item.price) }} €</span>
+            <span class="product__price">
+              {{ '%.2f'|format(item.price) }} €
+              {% if item.deposit %}<small class="product__deposit">+ {{ '%.2f'|format(item.deposit) }} € Pfand</small>{% endif %}
+            </span>
           </button>
         {% endfor %}
       </div>
@@ -22,13 +26,36 @@
   <aside class="cart" aria-label="Warenkorb">
     <h2 class="cart__heading">Bestellung</h2>
     <ul id="cart-list" class="cart__list" aria-live="polite"></ul>
-    <label class="cart__note">
-      Notiz
-      <textarea id="cart-note" rows="2" placeholder="z. B. ohne Senf"></textarea>
-    </label>
-    <div class="cart__total">
-      <span>Summe</span>
-      <strong id="cart-total">0,00 €</strong>
+    <div class="cart__tendered" aria-label="Vom Kunden gegeben">
+      <div class="cart__tendered-label">Gegeben <span class="cart__optional">(optional)</span></div>
+      <div class="cart__tendered-buttons">
+        {% for value in [5, 10, 20, 50, 100] %}
+          <button type="button" class="btn-tender" data-value="{{ value }}">{{ value }} €</button>
+        {% endfor %}
+      </div>
+      <div class="cart__tendered-custom">
+        <input type="number" id="cart-tendered-custom" step="0.10" min="0"
+               placeholder="andere Summe …" inputmode="decimal" autocomplete="off" />
+        <button type="button" id="cart-tendered-clear" class="btn-clear" aria-label="zurücksetzen">×</button>
+      </div>
+    </div>
+    <div class="cart__totals">
+      <div class="cart__row-total" id="cart-subtotal-row" hidden>
+        <span>Zwischensumme</span>
+        <span id="cart-subtotal">0,00 €</span>
+      </div>
+      <div class="cart__row-total" id="cart-deposit-row" hidden>
+        <span>Pfand</span>
+        <span id="cart-deposit">0,00 €</span>
+      </div>
+      <div class="cart__total">
+        <span>Summe</span>
+        <strong id="cart-total">0,00 €</strong>
+      </div>
+      <div class="cart__row-total cart__row-total--change" id="cart-change-row" hidden>
+        <span>Rückgeld</span>
+        <strong id="cart-change">0,00 €</strong>
+      </div>
     </div>
     <div class="cart__actions">
       <button id="cart-clear" type="button" class="btn btn--ghost">Leeren</button>

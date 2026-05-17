@@ -16,7 +16,7 @@ Lebende Liste mit konkreten Aufgaben, die noch anstehen. Reihenfolge ≈ Priorit
   - Kopf-/Fußbereich (Größe, Leerzeilen vor Cut)
 
 ### Umzug des Pi auf das GL.iNet-Netz
-- **Status:** offen – Pi läuft aktuell im Heimnetz (192.168.178.99)
+- **Status:** offen – Pi läuft aktuell im Heimnetz (192.168.178.10)
 - **Schritte:**
   1. Pi herunterfahren, LAN-Kabel vom Heimrouter ziehen und in den GL.iNet-Router (LAN-Port, nicht WAN).
   2. Pi einschalten.
@@ -38,13 +38,14 @@ Lebende Liste mit konkreten Aufgaben, die noch anstehen. Reihenfolge ≈ Priorit
 - **Format:** `categories[].items[] = {id, name, price}`, Preise als Dezimalzahl in EUR
 - **Bedenken:** `id` ist Schlüssel; wenn eine Bestellung auf eine alte `id` verweist, bleibt sie in `orders.json`. Also besser `id`s stabil halten.
 
-### Deployment/Update-Workflow dokumentieren
-- **Status:** ad-hoc noch nicht festgehalten
-- **Aktueller Ablauf:**
-  1. Änderung in WSL (`/home/smoser/rto_bonsystem`)
-  2. `rsync -avz --exclude='.venv' --exclude='__pycache__' --exclude='.git' /home/smoser/rto_bonsystem/ pi@<pi-ip>:/home/pi/rto_bonsystem/`
-  3. Auf dem Pi: `sudo systemctl restart bonsystem`
-- **TODO:** als Shortcut-Skript `scripts/deploy.sh` ablegen (nimmt Ziel-IP als Argument)
+### Deployment/Update-Workflow
+- **Status:** Skript vorhanden (`scripts/deploy.sh`)
+- **Benutzung:**
+  - `scripts/deploy.sh` → Default-Ziel `pi@192.168.178.10` (Heimnetz)
+  - `scripts/deploy.sh 192.168.8.10` → Produktiv-Pi im GL.iNet
+  - `SKIP_RESTART=1 scripts/deploy.sh` → nur syncen, ohne Restart
+- **Was es tut:** SSH-Erreichbarkeitscheck → `rsync` (ohne `.venv`, `.git`, `data/orders.json`, `.env`) → `systemctl restart bonsystem` → Status.
+- **Wenn `requirements.txt` sich geändert hat:** zusätzlich auf dem Pi `cd /home/pi/rto_bonsystem && .venv/bin/pip install -r requirements.txt` (braucht Internet, also vorher WAN am GL.iNet anstecken oder im Heimnetz machen).
 
 ### Datenbank statt JSON – Verkaufszahlen mit Zeitstempel tracken
 - **Status:** offen – heute werden Bestellungen append-only in `data/orders.json` geschrieben, jeder Eintrag enthält `created_at`.

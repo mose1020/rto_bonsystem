@@ -12,9 +12,10 @@ from .menu_service import find_item
 _write_lock = threading.Lock()
 
 
-def build_order(menu: dict, items: list[dict], note: str = "") -> dict:
+def build_order(menu: dict, items: list[dict], tendered: float | None = None) -> dict:
     resolved_items: list[dict] = []
-    total = 0.0
+    subtotal = 0.0
+    deposit_total = 0.0
     for entry in items:
         item_id = entry.get("id")
         quantity = int(entry.get("quantity", 1))
@@ -23,12 +24,18 @@ def build_order(menu: dict, items: list[dict], note: str = "") -> dict:
         item = find_item(menu, item_id)
         if item is None:
             raise ValueError(f"Unbekannter Artikel: {item_id}")
-        line_total = round(item["price"] * quantity, 2)
-        total = round(total + line_total, 2)
+        unit_price = float(item["price"])
+        deposit = float(item.get("deposit", 0.0))
+        line_subtotal = round(unit_price * quantity, 2)
+        line_deposit = round(deposit * quantity, 2)
+        line_total = round(line_subtotal + line_deposit, 2)
+        subtotal = round(subtotal + line_subtotal, 2)
+        deposit_total = round(deposit_total + line_deposit, 2)
         resolved_items.append({
             "id": item["id"],
             "name": item["name"],
-            "unit_price": item["price"],
+            "unit_price": unit_price,
+            "deposit": deposit,
             "quantity": quantity,
             "line_total": line_total,
         })
@@ -36,13 +43,24 @@ def build_order(menu: dict, items: list[dict], note: str = "") -> dict:
     if not resolved_items:
         raise ValueError("Bestellung ist leer.")
 
+    total = round(subtotal + deposit_total, 2)
+
+    tendered_value: float | None = None
+    change: float | None = None
+    if tendered is not None:
+        tendered_value = round(float(tendered), 2)
+        change = round(tendered_value - total, 2)
+
     return {
         "id": _generate_order_id(),
         "created_at": datetime.now().isoformat(timespec="seconds"),
         "currency": menu.get("currency", "EUR"),
         "items": resolved_items,
+        "subtotal": subtotal,
+        "deposit_total": deposit_total,
         "total": total,
-        "note": note,
+        "tendered": tendered_value,
+        "change": change,
     }
 
 

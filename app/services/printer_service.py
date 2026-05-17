@@ -39,30 +39,54 @@ def print_order(order: dict, *, device: str) -> None:
 
 def _render_receipt(printer, order: dict) -> None:
     currency = order.get("currency", "EUR")
+    tokens = _expand_tokens(order["items"])
+    total_tokens = len(tokens)
 
+    for idx, token in enumerate(tokens, start=1):
+        _render_token(printer, order, token, idx, total_tokens, currency)
+        if idx < total_tokens:
+            printer.cut(mode="PART")
+        else:
+            printer.cut()
+
+
+def _expand_tokens(items: list[dict]) -> list[dict]:
+    tokens: list[dict] = []
+    for line in items:
+        qty = int(line["quantity"])
+        unit_price = float(line.get("unit_price", line["line_total"] / qty))
+        deposit = float(line.get("deposit", 0.0))
+        for _ in range(qty):
+            tokens.append({
+                "name": line["name"],
+                "unit_price": unit_price,
+                "deposit": deposit,
+            })
+    return tokens
+
+
+def _render_token(printer, order: dict, token: dict, idx: int, total: int, currency: str) -> None:
     printer.set(align="center", bold=True, double_height=True, double_width=True)
     printer.text("BESTELLUNG\n")
     printer.set(align="center", bold=False, double_height=False, double_width=False)
     printer.text(f"Bon {order['id']}\n")
+    printer.text(f"Pos {idx}/{total}\n")
     printer.text(f"{order['created_at']}\n")
     printer.text("-" * 32 + "\n")
 
-    printer.set(align="left")
-    for line in order["items"]:
-        qty = line["quantity"]
-        name = line["name"]
-        line_total = f"{line['line_total']:.2f} {currency}"
-        printer.text(f"{qty:>2}x {name}\n")
-        printer.text(f"     {line_total:>26}\n")
+    printer.set(align="center", bold=True, double_height=True, double_width=True)
+    printer.text(f"{token['name']}\n")
+    printer.set(align="center", bold=False, double_height=False, double_width=False)
+
+    if token["deposit"] > 0:
+        printer.text(f"{token['unit_price']:.2f} {currency}\n")
+        printer.text(f"+ {token['deposit']:.2f} {currency} Pfand\n")
+        printer.text("-" * 16 + "\n")
+        printer.set(align="center", bold=True)
+        printer.text(f"{token['unit_price'] + token['deposit']:.2f} {currency}\n")
+        printer.set(bold=False)
+    else:
+        printer.text(f"{token['unit_price']:.2f} {currency}\n")
 
     printer.text("-" * 32 + "\n")
-    printer.set(align="right", bold=True)
-    printer.text(f"Summe: {order['total']:.2f} {currency}\n")
-
-    if order.get("note"):
-        printer.set(align="left", bold=False)
-        printer.text("\nNotiz:\n")
-        printer.text(order["note"] + "\n")
-
     printer.text("\n\n")
-    printer.cut()
