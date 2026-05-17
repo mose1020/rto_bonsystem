@@ -1,0 +1,10 @@
+{
+  "default": "drucker_1",
+  "printers": [
+    {
+      "id": "drucker_1",
+      "name": "Drucker_1",
+      "device": "/dev/usb/lp0"
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Übersicht – {{ menu.event.name }}{% endblock %}
+{% block topbar_right %}
+  <div class="topbar__refresh">
+    <span id="overview-updated" class="overview__updated"></span>
+    <button id="overview-refresh" type="button" class="btn-icon-light" aria-label="Aktualisieren" title="Aktualisieren">↻</button>
+  </div>
+{% endblock %}
+{% block content %}
+<div class="overview">
+  <header class="overview__bar">
+    <div class="overview__stats" aria-label="Gesamtzahlen">
+      <div class="stat">
+        <span class="stat__label">Bestell.</span>
+        <span class="stat__value" id="stat-orders">–</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Umsatz</span>
+        <span class="stat__value" id="stat-subtotal">–</span>
+      </div>
+      <div class="stat">
+        <span class="stat__label">Pfand</span>
+        <span class="stat__value" id="stat-deposit">–</span>
+      </div>
+      <div class="stat stat--accent">
+        <span class="stat__label">Gesamt</span>
+        <span class="stat__value" id="stat-total">–</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="overview__columns">
+    <section class="overview__panel" aria-label="Bestand pro Artikel">
+      <div class="overview__panel-head">Bestand</div>
+      <div class="overview__panel-body" id="overview-inventory">
+        <p class="overview__loading">Lade Bestand …</p>
+      </div>
+    </section>
+
+    <section class="overview__panel" aria-label="Letzte Bestellungen">
+      <div class="overview__panel-head">Letzte Bestellungen</div>
+      <div class="overview__panel-body overview__panel-body--table">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Zeit</th>
+              <th>Drucker</th>
+              <th>Artikel</th>
+              <th class="orders-table__right">Total</th>
+            </tr>
+          </thead>
+          <tbody id="overview-orders">
+            <tr><td colspan="4" class="overview__loading">Lade Bestellungen …</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <footer class="overview__admin">
+    <button id="overview-reset" type="button" class="reset-link">
+      <svg class="reset-link__icon" viewBox="0 0 16 16" aria-hidden="true">
+        <path fill="currentColor" d="M6 1.5h4l.5 1H13v1H3v-1h2.5l.5-1zM4 4.5h8l-.6 9.5a1.5 1.5 0 0 1-1.5 1.4H6.1A1.5 1.5 0 0 1 4.6 14L4 4.5zm2 1.5v7h1V6H6zm3 0v7h1V6H9z"/>
+      </svg>
+      Datenbank zurücksetzen
+    </button>
+  </footer>
+</div>
+
+<!-- Reset-Dialog (Passwort) -->
+<div id="reset-dialog" class="editor-overlay" hidden>
+  <div class="editor-card" role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title">
+    <h3 id="reset-dialog-title" class="editor-card__title">Datenbank zurücksetzen</h3>
+    <div class="editor-card__item editor-card__item--warning">
+      Alle Bestellungen werden gelöscht. Dieser Vorgang kann nicht
+      rückgängig gemacht werden. Vorhandene <code>orders.json</code>
+      wird als <code>orders.json.bak.&lt;timestamp&gt;</code> archiviert.
+    </div>
+    <form id="reset-dialog-form" class="editor-card__form">
+      <label class="editor-card__field">
+        <span>Passwort</span>
+        <input type="password" id="reset-dialog-password" autocomplete="current-password" required />
+      </label>
+      <p id="reset-dialog-error" class="editor-card__error" hidden></p>
+      <div class="editor-card__actions">
+        <button type="button" id="reset-dialog-cancel" class="btn btn--ghost">Abbrechen</button>
+        <button type="submit" class="btn btn--danger">Zurücksetzen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Inline-Editor-Dialog (zentrales Overlay) -->
+<div id="limit-editor" class="editor-overlay" hidden>
+  <div class="editor-card" role="dialog" aria-modal="true" aria-labelledby="limit-editor-title">
+    <h3 id="limit-editor-title" class="editor-card__title">Limits anpassen</h3>
+    <div class="editor-card__item" id="limit-editor-name">–</div>
+    <form id="limit-editor-form" class="editor-card__form">
+      <label class="editor-card__field">
+        <span>Kritischer Wert</span>
+        <input type="number" id="limit-editor-critical" min="0" step="1" required />
+      </label>
+      <label class="editor-card__field">
+        <span>Warnwert</span>
+        <input type="number" id="limit-editor-warn" min="0" step="1" required />
+        <small>Restbestand, ab dem die Warnung greift (muss kleiner sein als kritisch)</small>
+      </label>
+      <p id="limit-editor-error" class="editor-card__error" hidden></p>
+      <div class="editor-card__actions">
+        <button type="button" id="limit-editor-cancel" class="btn btn--ghost">Abbrechen</button>
+        <button type="submit" class="btn btn--primary">Speichern</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/overview.js') }}" defer></script>
+{% endblock %}

@@ -20,5 +20,11 @@ class Config:
     HTTP_HOST: str = os.environ.get("HTTP_HOST", "0.0.0.0")
     HTTP_PORT: int = int(os.environ.get("HTTP_PORT", "8080"))
 
+    # Passwort für administrative Aktionen (DB-Reset). Wenn leer, ist
+    # der Reset-Endpoint deaktiviert.
+    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "")
+
     MENU_PATH: Path = REPO_ROOT / "data" / "menu.json"
     ORDERS_PATH: Path = REPO_ROOT / "data" / "orders.json"
+    PRINTERS_PATH: Path = REPO_ROOT / "data" / "printers.json"
+    DB_PATH: Path = REPO_ROOT / "data" / "bonsystem.db"

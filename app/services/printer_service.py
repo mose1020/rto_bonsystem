@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import textwrap
 from datetime import datetime
@@ -15,6 +16,47 @@ WIDTH = 32  # Zeichen pro Zeile bei 80mm, normaler Schrift
 
 class PrinterError(RuntimeError):
     """Raised when a receipt cannot be printed."""
+
+
+def load_printers(path: Path, fallback_device: str | None = None) -> dict:
+    """Lädt Druckerliste aus printers.json. Wenn Datei fehlt und fallback_device
+    gesetzt ist, wird ein Default-Drucker mit diesem Device erzeugt – so läuft
+    die alte PRINTER_DEVICE-Konfiguration weiter."""
+    path = Path(path)
+    if path.is_file():
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        printers = data.get("printers") or []
+        default = data.get("default")
+        if not printers:
+            raise PrinterError(f"printers.json enthält keine Drucker: {path}")
+        if not default or not any(p.get("id") == default for p in printers):
+            default = printers[0]["id"]
+        return {"default": default, "printers": printers}
+
+    if fallback_device:
+        return {
+            "default": "default",
+            "printers": [
+                {"id": "default", "name": "Drucker", "device": fallback_device}
+            ],
+        }
+    raise PrinterError(f"Drucker-Konfiguration fehlt: {path}")
+
+
+def find_printer(printers_cfg: dict, printer_id: str | None) -> dict:
+    """Resolvt einen Drucker per ID. Fällt zurück auf 'default' wenn id None
+    oder unbekannt."""
+    printers = printers_cfg["printers"]
+    if printer_id:
+        for p in printers:
+            if p.get("id") == printer_id:
+                return p
+    default_id = printers_cfg.get("default")
+    for p in printers:
+        if p.get("id") == default_id:
+            return p
+    return printers[0]
 
 
 def print_order(order: dict, *, device: str, event: dict | None = None) -> None:
@@ -130,7 +172,12 @@ def _render_token(printer, order: dict, event: dict, token: dict,
         printer.text("GRATIS\n")
     else:
         printer.text(f"{total_for_token:.2f} {currency}\n")
-    printer.set(align="left", bold=False, double_height=False, double_width=False)
+
+    # Ganz kleiner Referenz-Footer: Bestellnummer + Datum, mittig, normale Schrift.
+    printer.set(align="center", bold=False, double_height=False, double_width=False)
+    printer.text("\n")
+    printer.text(f"{order['id']}\n")
+    printer.text(f"{_format_created_at(order['created_at'])}\n")
 
 
 def _resolve_logo_path(logo_filename: str | None) -> Path | None:

@@ -1,8 +1,101 @@
 (() => {
+  // ── Printer-Bar (immer da, Bestell- und Übersichts-Seite) ───────────
+  const printerStatus = document.getElementById("printer-status");
+  const printerSelect = document.getElementById("printer-select");
+  const STORAGE_KEY = "bonsystem.printerId";
+
+  if (printerSelect) {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const exists = Array.from(printerSelect.options).some(o => o.value === stored);
+      if (exists) printerSelect.value = stored;
+    }
+    printerSelect.addEventListener("change", () => {
+      localStorage.setItem(STORAGE_KEY, printerSelect.value);
+      pollPrinter();
+    });
+  }
+
+  function currentPrinterId() {
+    return printerSelect ? printerSelect.value : null;
+  }
+
+  async function pollPrinter() {
+    if (!printerStatus) return;
+    const id = currentPrinterId();
+    const url = id ? `/api/health/printer/${encodeURIComponent(id)}` : "/api/health/printer";
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        printerStatus.textContent = "bereit";
+        printerStatus.className = "status status--ok";
+        printerStatus.title = "Drucker erreichbar";
+      } else {
+        const data = await res.json().catch(() => ({}));
+        printerStatus.textContent = "offline";
+        printerStatus.className = "status status--error";
+        printerStatus.title = data.error || "Drucker nicht erreichbar";
+      }
+    } catch {
+      printerStatus.textContent = "?";
+      printerStatus.className = "status status--error";
+      printerStatus.title = "Status unbekannt";
+    }
+  }
+  if (printerStatus) {
+    pollPrinter();
+    setInterval(pollPrinter, 15000);
+  }
+
+  // ── Cart-Logik nur auf der Bestell-Seite ────────────────────────────
+  const list = document.getElementById("cart-list");
+  if (!list) return;  // wir sind auf der Übersicht (oder einer anderen Seite)
+
+  // ── Live-Bestand: Produktkarten anhand /api/reports/inventory einfärben
+  async function refreshInventoryStatus() {
+    try {
+      const res = await fetch("/api/reports/inventory");
+      if (!res.ok) return;
+      const data = await res.json();
+      const statusById = {};
+      for (const cat of data.categories || []) {
+        for (const it of cat.items || []) statusById[it.id] = it;
+      }
+      document.querySelectorAll(".product").forEach((btn) => {
+        const id = btn.dataset.id;
+        const info = statusById[id];
+        btn.classList.remove("product--warn", "product--critical");
+        // Bestehender Badge wird durch Status-Badge ersetzt
+        const existing = btn.querySelector(".product__stock");
+        if (existing) existing.remove();
+        if (!info || !info.critical) return;
+        if (info.status === "critical") {
+          btn.classList.add("product--critical");
+          appendStockBadge(btn, `nur noch ${Math.max(0, info.remaining)}`, "critical");
+        } else if (info.status === "warn") {
+          btn.classList.add("product--warn");
+          appendStockBadge(btn, `noch ${info.remaining}`, "warn");
+        }
+      });
+    } catch (err) {
+      // still – Bestand ist nice-to-have
+    }
+  }
+  function appendStockBadge(btn, text, kind) {
+    // Badge inline in die Preis-Zeile einhängen (flex-wrap), damit es
+    // nicht mit dem Artikelnamen kollidieren kann.
+    const priceEl = btn.querySelector(".product__price") || btn;
+    const span = document.createElement("span");
+    span.className = `product__stock product__stock--${kind}`;
+    span.textContent = text;
+    priceEl.appendChild(span);
+  }
+  refreshInventoryStatus();
+  setInterval(refreshInventoryStatus, 20000);
+
   const cart = new Map(); // id -> {id, name, price, deposit, quantity}
   let tendered = null;    // null oder Zahl in EUR
 
-  const list = document.getElementById("cart-list");
   const subtotalEl = document.getElementById("cart-subtotal");
   const subtotalRow = document.getElementById("cart-subtotal-row");
   const depositEl = document.getElementById("cart-deposit");
@@ -16,7 +109,6 @@
   const tenderButtons = document.querySelectorAll(".btn-tender");
   const tenderCustom = document.getElementById("cart-tendered-custom");
   const tenderClear = document.getElementById("cart-tendered-clear");
-  const printerStatus = document.getElementById("printer-status");
 
   const fmt = (v) => `${v.toFixed(2).replace(".", ",")} €`;
 
@@ -90,15 +182,11 @@
     } else {
       tendered = Number(value);
     }
-    // Buttons-Highlight aktualisieren
     tenderButtons.forEach((b) => {
       const v = parseFloat(b.dataset.value);
       b.classList.toggle("btn-tender--active", tendered !== null && v === tendered);
     });
-    // Custom-Input nur leeren, wenn die Aktion vom Button kam
-    if (source === "button") {
-      tenderCustom.value = "";
-    } else if (source === "clear") {
+    if (source === "button" || source === "clear") {
       tenderCustom.value = "";
     }
     renderChange(currentTotal());
@@ -139,7 +227,6 @@
   tenderButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const value = parseFloat(btn.dataset.value);
-      // Zweiter Klick auf den gleichen Wert hebt ihn auf
       if (tendered === value) setTendered(null, { source: "clear" });
       else setTendered(value, { source: "button" });
     });
@@ -173,6 +260,7 @@
         body: JSON.stringify({
           items: [...cart.values()].map(({ id, quantity }) => ({ id, quantity })),
           tendered: tendered,
+          printer_id: currentPrinterId(),
         }),
       });
       const data = await res.json();
@@ -185,6 +273,7 @@
         cart.clear();
         setTendered(null, { source: "clear" });
         render();
+        refreshInventoryStatus();  // Bestand direkt nach Druck aktualisieren
       }
     } catch (err) {
       feedback.textContent = `Netzwerkfehler: ${err.message}`;
@@ -193,24 +282,6 @@
       submitBtn.disabled = cart.size === 0;
     }
   });
-
-  async function pollPrinter() {
-    try {
-      const res = await fetch("/api/health/printer");
-      if (res.ok) {
-        printerStatus.textContent = "Drucker: bereit";
-        printerStatus.className = "status status--ok";
-      } else {
-        printerStatus.textContent = "Drucker: offline";
-        printerStatus.className = "status status--error";
-      }
-    } catch {
-      printerStatus.textContent = "Drucker: ?";
-      printerStatus.className = "status status--error";
-    }
-  }
-  pollPrinter();
-  setInterval(pollPrinter, 15000);
 
   render();
 })();

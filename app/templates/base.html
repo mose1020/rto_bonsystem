@@ -9,7 +9,8 @@
   <body>
     <header class="topbar">
       <div class="topbar__brand">
-        <span class="topbar__pulse" aria-hidden="true"></span>
+        <img class="topbar__logo" src="{{ url_for('static', filename='img/rto-logo.png') }}"
+             alt="Running Team Ortenau" />
         <div class="topbar__titles">
           <h1 class="topbar__event">
             {{ menu.event.name if menu and menu.event else 'Bonsystem' }}
@@ -19,7 +20,35 @@
           {% endif %}
         </div>
       </div>
-      <span id="printer-status" class="status status--unknown" title="Druckerstatus">Drucker: …</span>
+
+      <nav class="topbar__nav" aria-label="Navigation">
+        <a href="{{ url_for('menu.index') }}"
+           class="topbar__navlink{% if request.endpoint == 'menu.index' %} topbar__navlink--active{% endif %}">
+          Bestellung
+        </a>
+        <a href="{{ url_for('menu.overview') }}"
+           class="topbar__navlink{% if request.endpoint == 'menu.overview' %} topbar__navlink--active{% endif %}">
+          Übersicht
+        </a>
+      </nav>
+
+      {% block topbar_right %}
+        <div class="topbar__printer">
+          {% if printers and printers|length > 0 %}
+            <label class="topbar__printer-label" for="printer-select">Drucker</label>
+            <select id="printer-select"
+                    class="topbar__printer-select"
+                    data-default="{{ default_printer_id }}">
+              {% for p in printers %}
+                <option value="{{ p.id }}" {% if p.id == default_printer_id %}selected{% endif %}>
+                  {{ p.name }}
+                </option>
+              {% endfor %}
+            </select>
+          {% endif %}
+          <span id="printer-status" class="status status--unknown" title="Druckerstatus">…</span>
+        </div>
+      {% endblock %}
     </header>
     <main class="main">
       {% block content %}{% endblock %}
