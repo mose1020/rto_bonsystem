@@ -4,17 +4,6 @@ Lebende Liste mit konkreten Aufgaben, die noch anstehen. Reihenfolge ≈ Priorit
 
 ## Priorität 1 – Blockiert Produktivnutzung
 
-### Bon-Formatierung verbessern
-- **Status:** offen, Details folgen in nächster Session
-- **Beschreibung:** Das aktuelle Layout passt noch nicht. Konkrete Kritikpunkte kommen vom Nutzer (Foto/Beschreibung).
-- **Einstiegspunkt im Code:** `app/services/printer_service.py::_render_receipt`
-- **Relevante Regeln:** `docs/style-guide.md` Abschnitt „Bon-Layout (Thermodruck)"
-- **Typische Stellschrauben:**
-  - Codepage bei Umlauten (`printer.charcode("CP858")` oder `"CP437"` o. ä.)
-  - Zeilenbreite (32 Zeichen auf 80 mm)
-  - Anordnung Name/Preis (aktuell in zwei Zeilen, evtl. besser in einer)
-  - Kopf-/Fußbereich (Größe, Leerzeilen vor Cut)
-
 ### Umzug des Pi auf das GL.iNet-Netz
 - **Status:** offen – Pi läuft aktuell im Heimnetz (192.168.178.10)
 - **Schritte:**
@@ -30,61 +19,56 @@ Lebende Liste mit konkreten Aufgaben, die noch anstehen. Reihenfolge ≈ Priorit
 - **Beschreibung:** Nach erfolgreichem Umzug + installiertem System Kabel aus dem WAN-Port des GL.iNet ziehen, damit das Produktiv-Netz wirklich offline ist.
 - **Wiederherstellen:** Wenn später Updates nötig sind, einfach wieder einstecken, `sudo apt upgrade && pip install -U -r requirements.txt`, dann wieder abziehen.
 
+### `ADMIN_PASSWORD` auf dem Pi setzen
+- **Status:** offen – `.env` wird vom `deploy.sh` nicht überschrieben, muss manuell auf dem Pi gepflegt werden.
+- **Befehl:**
+  ```bash
+  ssh pi@192.168.178.10
+  # in /home/pi/rto_bonsystem/.env das Feld ADMIN_PASSWORD setzen
+  sudo systemctl restart bonsystem
+  ```
+- **Bemerkung:** Solange leer, ist der DB-Reset-Button auf der Übersichtsseite deaktiviert (`/api/admin/reset` antwortet 503).
+
 ## Priorität 2 – Inhaltlich
 
-### Speisekarte auf echte Artikel umstellen
-- **Status:** offen – aktuelle `data/menu.json` enthält Beispielartikel (Bier, Bratwurst, …)
-- **Datei:** `data/menu.json`
-- **Format:** `categories[].items[] = {id, name, price}`, Preise als Dezimalzahl in EUR
-- **Bedenken:** `id` ist Schlüssel; wenn eine Bestellung auf eine alte `id` verweist, bleibt sie in `orders.json`. Also besser `id`s stabil halten.
+### Maximalwerte für die echte Veranstaltung anpassen
+- **Status:** offen – `data/menu.json` hat Default-Werte für `critical`/`warn` pro Artikel.
+- **Vorgehen:**
+  - direkt auf der Übersichtsseite via `✎`-Button pro Artikel (speichert per `PATCH /api/menu/items/<id>`)
+  - oder `data/menu.json` editieren + `./scripts/deploy.sh`
 
-### Deployment/Update-Workflow
-- **Status:** Skript vorhanden (`scripts/deploy.sh`)
-- **Benutzung:**
-  - `scripts/deploy.sh` → Default-Ziel `pi@192.168.178.10` (Heimnetz)
-  - `scripts/deploy.sh 192.168.8.10` → Produktiv-Pi im GL.iNet
-  - `SKIP_RESTART=1 scripts/deploy.sh` → nur syncen, ohne Restart
-- **Was es tut:** SSH-Erreichbarkeitscheck → `rsync` (ohne `.venv`, `.git`, `data/orders.json`, `.env`) → `systemctl restart bonsystem` → Status.
-- **Wenn `requirements.txt` sich geändert hat:** zusätzlich auf dem Pi `cd /home/pi/rto_bonsystem && .venv/bin/pip install -r requirements.txt` (braucht Internet, also vorher WAN am GL.iNet anstecken oder im Heimnetz machen).
+### Stabile USB-Device-Namen via udev (bei Multi-Drucker)
+- **Status:** offen – Linux nummeriert `/dev/usb/lp0`, `lp1` … in Anschluss-Reihenfolge, nicht stabil über Reboots.
+- **Lösung:** udev-Rule legen, die abhängig von USB-Seriennummer einen symbolischen Link unter `/dev/bonsystem/drucker_1`, `drucker_2` … erzeugt. Diese Symlinks dann in `data/printers.json::device`.
+- **Erst nötig wenn der zweite Drucker physisch angeschlossen ist** – mit nur einem Drucker bleibt `lp0` stabil.
 
-### Datenbank statt JSON – Verkaufszahlen mit Zeitstempel tracken
-- **Status:** offen – heute werden Bestellungen append-only in `data/orders.json` geschrieben, jeder Eintrag enthält `created_at`.
-- **Motivation:** Reports erstellen („Wie viel Bier in welcher Stunde?"), Tages-/Event-Abrechnung, ggf. Live-Dashboard.
-- **Vorschlag:** SQLite (eingebaut in Python, keine extra Abhängigkeit, läuft offline), eine Tabelle `orders` (Header) + `order_items` (Positionen) + optional `events` (Datum, Name) zum Gruppieren mehrerer Events.
-- **Einstiegspunkte im Code:**
-  - `app/services/order_service.py::persist_order` – Schreibpfad
-  - `app/services/order_service.py` (neu: `list_orders(from, to)`, Aggregation pro Artikel/Stunde)
-  - Neue Route(n) unter `app/routes/reports.py`
-  - `app/config.py`: `DB_PATH`
-- **Migration:** einmaliger Import von `orders.json` in die DB bevor umgeschaltet wird.
-- **Nicht-Ziel:** ORM (SQLAlchemy). Reicht: `sqlite3`-Modul aus der Standard-Library mit handgeschriebenen SQL-Statements.
+### Auto-Split nach Kategorie auf mehrere Drucker
+- **Status:** nicht implementiert. Multi-Drucker existiert, aber `print_order` druckt aktuell den ganzen Auftrag auf den gewählten Drucker.
+- **Skizze:** in `printer_service.print_order` Token-Liste nach `category` partitionieren und pro Kategorie einen Drucker wählen (Mapping in `printers.json`).
+
+### Storno / Nachdruck
+- **Status:** nicht implementiert
+- **Beschreibung:** Falls ein Druck fehlschlägt, ist die Bestellung in DB + `orders.json` persistiert, aber kein UI-Pfad zum erneuten Drucken.
+- **Skizze:** neue Route `POST /api/orders/<id>/reprint` die `print_order()` mit persistierter Order nochmal aufruft. UI-Button in der Bestellungstabelle auf der Übersichtsseite.
 
 ## Priorität 3 – Nice to have
 
 ### Perforiertes / vorperforiertes Thermopapier
-- **Status:** offen – zu recherchieren
-- **Frage des Nutzers:** Gibt es 80-mm-Thermorollen mit Perforationen zwischen Bons, damit jede Bestellung als einzelnes Ticket abreißbar ist?
-- **Kontext:** Der ITPP047P hat bereits einen Auto-Cutter, jeder Druck wird derzeit per `printer.cut()` getrennt. Perforation wäre also Alternativ-/Fallback-Option (z. B. falls Cutter verschleißt oder bei hoher Druckfrequenz nerven soll).
-- **Zu klären:**
-  - Gibt es 80-mm-Thermopapier **mit Perforationen in regelmäßigen Abständen** (z. B. alle 10 cm) im Handel?
-  - Wenn ja: passen die Abstände zur typischen Bon-Länge? Variiert die Bon-Länge stark (je nach Anzahl Artikel)?
-  - Alternative: **Partial Cut** statt Full Cut – der Auto-Cutter lässt einen kleinen Steg stehen, sodass Bons sauber abreißen ohne runterzufallen. In `python-escpos` via `printer.cut(mode="PART")` statt `printer.cut()`.
-- **Pragma:** Wahrscheinlich reicht **Partial Cut**; echte Perforation im Papier ist bei 80-mm-Rollen für POS-Drucker unüblich.
+- **Status:** im Code teilweise umgesetzt
+- **Was implementiert ist:** Partial Cut (`printer.cut(mode="PART")`) zwischen den Token-Bons, Full Cut am Ende. Damit hängen die Bons zusammen und lassen sich abreißen.
+- **Offen:** Testen ob der Munbyn-Auto-Cutter zuverlässig partial cuttet, bei hoher Druckfrequenz nicht überhitzt.
 
 ### Kiosk-Modus auf dem Hamtysan-Monitor
 - **Status:** optional, aus `docs/raspberry-pi-setup.md` Abschnitt 6 bekannt
 - **Wann relevant:** wenn am Pi direkt bedient werden soll (Touch?) oder Status angezeigt
 
-### Storno / Nachdruck
-- **Status:** nicht implementiert
-- **Beschreibung:** Falls ein Druck fehlschlägt, ist die Bestellung in `orders.json` persistiert, aber kein UI-Pfad zum erneuten Drucken.
-- **Skizze:** neue Route `POST /api/orders/<id>/reprint` die `print_order()` mit persistierter Order nochmal aufruft.
-
-### Küchen-/Theken-Trennung (zweiter Drucker)
-- **Status:** nicht geplant solange nur ein Drucker existiert
-
 ### Auth / Bediener-Login
 - **Status:** bewusst weggelassen, LAN ist isoliert
+- **Aktueller Stand:** Nur das Admin-Passwort schützt den DB-Reset. Alles andere ist offen für jeden im LAN.
+
+### Tages-Reports / Export
+- **Status:** API existiert (`/api/reports/orders`, `/api/reports/summary`), aber kein UI für Filter nach Zeitraum oder CSV-Export.
+- **Skizze:** Übersichtsseite um „Export"-Button erweitern, der `/api/reports/orders?limit=…&day=…` aufruft und CSV anbietet.
 
 ## Erledigt (Archiv)
 
@@ -93,3 +77,15 @@ Lebende Liste mit konkreten Aufgaben, die noch anstehen. Reihenfolge ≈ Priorit
 - [x] Umstellung Drucker von Netzwerk auf USB (`python-escpos.File`)
 - [x] systemd-Autostart
 - [x] Erster erfolgreicher Testbon aus der App
+- [x] `scripts/deploy.sh` für Sync + Service-Restart
+- [x] Bon-Formatierung mit Logo (Ortenauer Laufnacht), Token-Druck pro Stück, Footer mit Bestellnummer + Datum, einheitlicher Preisblock für ohne/mit Pfand/gratis
+- [x] Echte Speisekarte aus `Speisekarte_2026.pdf` eingebaut, inkl. Aperol-Volumen-Korrektur und Bunter Salatteller
+- [x] Sponsoren-Bons als Gratis-Kategorie (Essen / Getränk / Kaffee oder Kuchen)
+- [x] Pfand wird sauber ausgewiesen (in Cart, Order, Bon, DB)
+- [x] „Gegeben"-Block mit Schein-Buttons + Custom-Input + Rückgeld-Berechnung statt der Notiz-Textarea
+- [x] SQLite-Persistierung (`data/bonsystem.db`) mit automatischer Migration aus `orders.json` beim ersten Start
+- [x] Reports-API (`/api/reports/orders`, `/summary`, `/inventory`)
+- [x] Übersichtsseite mit Stats, Bestand (sortiert nach Auslastung), letzte Bestellungen
+- [x] Bestands-Limits (`critical`, `warn`) pro Artikel, inline-Editor in der UI
+- [x] Multi-Drucker-Konfiguration über `data/printers.json`, Drucker-Dropdown in der Topbar mit localStorage-Persistierung
+- [x] DB-Reset auf der Übersichtsseite, passwortgeschützt über `ADMIN_PASSWORD` aus `.env`

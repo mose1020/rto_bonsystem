@@ -60,10 +60,46 @@ PRINTER_DEVICE=/dev/usb/lp1 python scripts/print_test.py
 
 ```bash
 curl http://192.168.8.10:8080/api/health/printer
-# -> {"status":"ok","device":"/dev/usb/lp0"}
+# -> {"status":"ok","device":"/dev/usb/lp0","printer":{"id":"drucker_1","name":"Drucker_1"}}
 ```
 
 In der Weboberfläche Artikel anklicken und „Bon drucken“.
+
+## 5a. Mehrere Drucker einrichten
+
+Wenn ein zweiter (oder dritter) Munbyn angeschlossen wird, taucht er als `/dev/usb/lp1`, `lp2`, … auf. Konfiguration läuft über `data/printers.json`:
+
+```json
+{
+  "default": "drucker_1",
+  "printers": [
+    {"id": "drucker_1", "name": "Drucker_1", "device": "/dev/usb/lp0"},
+    {"id": "drucker_2", "name": "Drucker_2", "device": "/dev/usb/lp1"}
+  ]
+}
+```
+
+Per Health-Check pro Drucker prüfen:
+```bash
+curl http://192.168.8.10:8080/api/health/printer/drucker_2
+```
+
+In der UI erscheint dann ein Dropdown rechts oben in der Topbar; der gewählte Drucker bleibt im Browser (localStorage) gespeichert und wird mit jeder Bestellung mitgeschickt (Payload-Feld `printer_id`).
+
+**Wichtig: stabile Device-Pfade.** Linux nummeriert die `lp*`-Devices nach Anschluss-Reihenfolge — nach einem Reboot kann `lp0` und `lp1` getauscht sein. Für den Produktivbetrieb mit mehreren Druckern empfiehlt sich eine udev-Rule, die anhand der USB-Seriennummer einen stabilen Symlink anlegt:
+
+```bash
+# Seriennummer ermitteln (Drucker per USB anschließen, dann)
+udevadm info -a -n /dev/usb/lp0 | grep -E 'idVendor|idProduct|serial'
+
+# /etc/udev/rules.d/99-bonsystem-printers.rules
+SUBSYSTEM=="usb", ATTRS{idVendor}=="04b8", ATTRS{idProduct}=="0e20", ATTRS{serial}=="SERIENNR1", SYMLINK+="bonsystem/drucker_1"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="04b8", ATTRS{idProduct}=="0e20", ATTRS{serial}=="SERIENNR2", SYMLINK+="bonsystem/drucker_2"
+
+sudo udevadm control --reload && sudo udevadm trigger
+```
+
+In `printers.json` dann `"device": "/dev/bonsystem/drucker_1"` statt `/dev/usb/lp0`.
 
 ## 6. Typische Probleme
 

@@ -109,3 +109,39 @@ source .venv/bin/activate
 pip install -U -r requirements.txt
 sudo systemctl restart bonsystem
 ```
+
+## 8. Passwortfreie sudo-Regel für `deploy.sh`
+
+`scripts/deploy.sh` läuft nicht-interaktiv und kann das sudo-Passwort nicht eingeben. Damit `sudo systemctl restart bonsystem` durchläuft, eine sudoers-Regel anlegen (am Pi):
+
+```bash
+sudo visudo -f /etc/sudoers.d/bonsystem-deploy
+```
+
+Inhalt – exakt eine Zeile:
+
+```
+pi ALL=(root) NOPASSWD: /usr/bin/systemctl restart bonsystem, /usr/bin/systemctl start bonsystem, /usr/bin/systemctl stop bonsystem, /usr/bin/systemctl status bonsystem
+```
+
+Speichern (visudo validiert beim Speichern; bei Fehlern wird die Datei nicht installiert). Rechte: `sudo chmod 440 /etc/sudoers.d/bonsystem-deploy`.
+
+Verifizieren:
+```bash
+sudo -n systemctl restart bonsystem && echo OK
+```
+Muss ohne Passwort durchlaufen.
+
+## 9. `.env` auf dem Pi pflegen
+
+Die Datei `.env` ist im `deploy.sh` aus dem rsync **ausgeschlossen** und muss einmalig auf dem Pi angelegt + gepflegt werden. Mindestinhalt:
+
+```
+FLASK_SECRET_KEY=…langes-zufälliges-passwort…
+PRINTER_DEVICE=/dev/usb/lp0
+HTTP_HOST=0.0.0.0
+HTTP_PORT=8080
+ADMIN_PASSWORD=…wird-für-DB-Reset-gebraucht…
+```
+
+Nach Änderungen: `sudo systemctl restart bonsystem`.
