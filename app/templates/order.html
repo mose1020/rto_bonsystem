@@ -7,15 +7,20 @@
       <h2 class="catalog__heading">{{ category.name }}</h2>
       <div class="catalog__grid">
         {% for item in category["items"] %}
-          <button type="button" class="product{% if item.deposit %} product--deposit{% endif %}"
+          {% set is_gratis = (item.price == 0) and not item.deposit %}
+          <button type="button" class="product{% if item.deposit %} product--deposit{% endif %}{% if is_gratis %} product--gratis{% endif %}"
                   data-id="{{ item.id }}"
                   data-name="{{ item.name }}"
                   data-price="{{ '%.2f'|format(item.price) }}"
                   data-deposit="{{ '%.2f'|format(item.deposit or 0) }}">
             <span class="product__name">{{ item.name }}</span>
             <span class="product__price">
-              {{ '%.2f'|format(item.price) }} €
-              {% if item.deposit %}<small class="product__deposit">+ {{ '%.2f'|format(item.deposit) }} € Pfand</small>{% endif %}
+              {% if is_gratis %}
+                GRATIS
+              {% else %}
+                {{ '%.2f'|format(item.price) }} €
+                {% if item.deposit %}<small class="product__deposit">+ {{ '%.2f'|format(item.deposit) }} € Pfand</small>{% endif %}
+              {% endif %}
             </span>
           </button>
         {% endfor %}

@@ -38,14 +38,18 @@
       const li = document.createElement("li");
       li.className = "cart__row";
       const unitTotal = price + deposit;
+      const isGratis = unitTotal === 0;
       const depositHint = deposit > 0
         ? `<small class="cart__deposit-hint">inkl. ${fmt(deposit)} Pfand</small>`
         : "";
+      const priceLine = isGratis
+        ? `<small class="cart__gratis-tag">GRATIS × ${quantity}</small>`
+        : `<small>${fmt(unitTotal)} × ${quantity}</small>`;
       li.innerHTML = `
         <button class="qty" type="button" aria-label="weniger" data-act="dec" data-id="${id}">−</button>
         <div>
           <div class="cart__name">${name}</div>
-          <small>${fmt(unitTotal)} × ${quantity}</small>
+          ${priceLine}
           ${depositHint}
         </div>
         <button class="qty" type="button" aria-label="mehr" data-act="inc" data-id="${id}">+</button>

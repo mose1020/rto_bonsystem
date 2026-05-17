@@ -1,32 +1,38 @@
 {
-  "version": 2,
+  "version": 3,
   "currency": "EUR",
+  "event": {
+    "name": "Ortenauer Laufnacht",
+    "organizer": "Running Team Ortenau",
+    "logo": "laufnacht-logo.png"
+  },
   "categories": [
     {
       "id": "getraenke",
       "name": "Getränke",
       "items": [
-        {"id": "wasser-peterstaler-05",          "name": "Peterstaler Mineralwasser 0,5l",      "price": 2.50},
-        {"id": "apfelschorle-peterstaler-05",    "name": "Peterstaler Apfelsaftschorle 0,5l",   "price": 3.00},
-        {"id": "topfit-peterstaler-05",          "name": "Peterstaler Topfit 0,5l",             "price": 3.00},
-        {"id": "coca-cola-05",                   "name": "Coca-Cola 0,5l",                       "price": 3.00},
-        {"id": "spezi-paulaner-05",              "name": "Paulaner Spezi 0,5l",                  "price": 3.00},
+        {"id": "wasser-peterstaler-05",          "name": "Peterstaler Mineralwasser 0,5l",         "price": 2.50},
+        {"id": "apfelschorle-peterstaler-05",    "name": "Peterstaler Apfelsaftschorle 0,5l",      "price": 3.00},
+        {"id": "topfit-peterstaler-05",          "name": "Peterstaler Topfit 0,5l",                "price": 3.00},
+        {"id": "coca-cola-05",                   "name": "Coca-Cola 0,5l",                          "price": 3.00},
+        {"id": "spezi-paulaner-05",              "name": "Paulaner Spezi 0,5l",                     "price": 3.00},
 
-        {"id": "ketterer-urweisse-fass-05",      "name": "Ketterer Ur-Weisse hell vom Fass 0,5l", "price": 4.00, "deposit": 2.00},
-        {"id": "ketterer-pils-fass-03",          "name": "Ketterer Pils feinherb vom Fass 0,3l",  "price": 3.00, "deposit": 2.00},
-        {"id": "ketterer-weizen-af-05",          "name": "Ketterer Weizen alkoholfrei 0,5l",      "price": 4.00, "deposit": 2.00},
-        {"id": "ketterer-weizenradler-af-05",    "name": "Ketterer Weizenradler alkoholfrei 0,5l","price": 4.00, "deposit": 2.00},
-        {"id": "aperol-04",                      "name": "Aperol 0,4l",                            "price": 6.00, "deposit": 2.00}
+        {"id": "ketterer-urweisse-fass-05",      "name": "Ketterer Ur-Weisse hell vom Fass 0,5l",   "price": 4.00, "deposit": 2.00},
+        {"id": "ketterer-pils-fass-03",          "name": "Ketterer Pils feinherb vom Fass 0,3l",    "price": 3.00, "deposit": 2.00},
+        {"id": "ketterer-weizen-af-05",          "name": "Ketterer Weizen alkoholfrei 0,5l",        "price": 4.00, "deposit": 2.00},
+        {"id": "ketterer-weizenradler-af-05",    "name": "Ketterer Weizenradler alkoholfrei 0,5l",  "price": 4.00, "deposit": 2.00},
+        {"id": "aperol-02",                      "name": "Aperol 0,2l",                              "price": 6.00, "deposit": 2.00}
       ]
     },
     {
       "id": "speisen",
       "name": "Speisen",
       "items": [
-        {"id": "kaesespaetzle",     "name": "Portion Käsespätzle",       "price": 4.00},
-        {"id": "grillwurst-weck",   "name": "Grillwurst (Rot) im Weck",  "price": 3.50},
-        {"id": "merguez-weck",      "name": "Merguez im Weck",           "price": 4.00},
-        {"id": "grillsteak-weck",   "name": "Grillsteak im Weck",        "price": 5.00}
+        {"id": "salatteller",       "name": "Bunter Salatteller (auch vegan)", "price": 5.00},
+        {"id": "kaesespaetzle",     "name": "Portion Käsespätzle",              "price": 4.00},
+        {"id": "grillwurst-weck",   "name": "Grillwurst (Rot) im Weck",         "price": 3.50},
+        {"id": "merguez-weck",      "name": "Merguez im Weck",                  "price": 4.00},
+        {"id": "grillsteak-weck",   "name": "Grillsteak im Weck",               "price": 5.00}
       ]
     },
     {
@@ -35,6 +41,15 @@
       "items": [
         {"id": "kaffee", "name": "Tasse Kaffee", "price": 2.00},
         {"id": "kuchen", "name": "Stück Kuchen", "price": 2.00}
+      ]
+    },
+    {
+      "id": "sponsoren-bons",
+      "name": "Sponsoren-Bons",
+      "items": [
+        {"id": "sponsor-essen",         "name": "Gratis Essen",                "price": 0.00},
+        {"id": "sponsor-getraenk",      "name": "Gratis Getränk",              "price": 0.00},
+        {"id": "sponsor-kaffee-kuchen", "name": "Gratis Kaffee oder Kuchen",   "price": 0.00}
       ]
     }
   ]

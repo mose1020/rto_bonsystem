@@ -9,9 +9,19 @@ MENU = {
         {"id": "drinks", "name": "Drinks", "items": [
             {"id": "bier", "name": "Bier", "price": 4.0, "deposit": 2.0},
             {"id": "wasser", "name": "Wasser", "price": 2.5},
+            {"id": "sponsor-essen", "name": "Gratis Essen", "price": 0.0},
         ]},
     ],
 }
+
+
+def test_build_order_handles_gratis_items():
+    order = build_order(MENU, [{"id": "sponsor-essen", "quantity": 2}])
+    assert order["subtotal"] == 0.0
+    assert order["deposit_total"] == 0.0
+    assert order["total"] == 0.0
+    assert order["items"][0]["unit_price"] == 0.0
+    assert order["items"][0]["line_total"] == 0.0
 
 
 def test_build_order_sums_correctly():

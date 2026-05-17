@@ -38,7 +38,7 @@ def create_order():
     persist_order(current_app.config["ORDERS_PATH"], order)
 
     try:
-        print_order(order, device=current_app.config["PRINTER_DEVICE"])
+        print_order(order, device=current_app.config["PRINTER_DEVICE"], event=menu.get("event"))
     except PrinterError as exc:
         log.exception("Druckfehler")
         return jsonify({"order": order, "print_error": str(exc)}), 502

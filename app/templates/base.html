@@ -3,12 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>{% block title %}Bonsystem{% endblock %}</title>
+    <title>{% block title %}{{ menu.event.name if menu and menu.event else 'Bonsystem' }}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
   </head>
   <body>
     <header class="topbar">
-      <h1 class="topbar__title">Bonsystem</h1>
+      <div class="topbar__brand">
+        <span class="topbar__pulse" aria-hidden="true"></span>
+        <div class="topbar__titles">
+          <h1 class="topbar__event">
+            {{ menu.event.name if menu and menu.event else 'Bonsystem' }}
+          </h1>
+          {% if menu and menu.event and menu.event.organizer %}
+            <span class="topbar__sub">{{ menu.event.organizer }}</span>
+          {% endif %}
+        </div>
+      </div>
       <span id="printer-status" class="status status--unknown" title="Druckerstatus">Drucker: …</span>
     </header>
     <main class="main">
